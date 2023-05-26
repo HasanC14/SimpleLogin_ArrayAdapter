@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
             val user = findViewById<EditText>(R.id.user).text.toString()
             val pass = findViewById<EditText>(R.id.pass).text.toString()
             if (user=="hasan"&&pass =="123"){
-                val intent = Intent(this@MainActivity, home::class.java)
+                val intent = Intent(this@MainActivity, Home::class.java)
                 startActivity(intent)
             } else{ Toast.makeText( this@MainActivity, "Incorrect username or password", Toast.LENGTH_SHORT).show()}
         }

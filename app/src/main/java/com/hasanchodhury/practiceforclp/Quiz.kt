@@ -8,14 +8,20 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 
 class Quiz : AppCompatActivity() {
     private lateinit var questionEditText: EditText
     private lateinit var addQuestionButton: Button
     private lateinit var seeAllQuestionsButton: Button
+    private lateinit var questionTextView: TextView
+    private lateinit var prevButton: Button
+    private lateinit var nextButton: Button
 
     private lateinit var dbHelper: DatabaseHelper
+    private var questionList: List<String> = emptyList()
+    private var currentQuestionIndex: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +30,9 @@ class Quiz : AppCompatActivity() {
         questionEditText = findViewById(R.id.input_q)
         addQuestionButton = findViewById(R.id.add_q)
         seeAllQuestionsButton = findViewById(R.id.all_q)
+        questionTextView = findViewById(R.id.questionTextView)
+        prevButton = findViewById(R.id.prevButton)
+        nextButton = findViewById(R.id.nextButton)
 
         dbHelper = DatabaseHelper(this)
 
@@ -44,9 +53,33 @@ class Quiz : AppCompatActivity() {
         }
 
         seeAllQuestionsButton.setOnClickListener {
-            val questions = dbHelper.getAllQuestions()
-            Toast.makeText(this, questions, Toast.LENGTH_LONG).show()
+            questionList = dbHelper.getAllQuestions()
+            if (questionList.isNotEmpty()) {
+                currentQuestionIndex = 0
+                displayCurrentQuestion()
+            } else {
+                questionTextView.text = "No questions found."
+            }
         }
+
+        prevButton.setOnClickListener {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--
+                displayCurrentQuestion()
+            }
+        }
+
+        nextButton.setOnClickListener {
+            if (currentQuestionIndex < questionList.size - 1) {
+                currentQuestionIndex++
+                displayCurrentQuestion()
+            }
+        }
+    }
+
+    private fun displayCurrentQuestion() {
+        val question = questionList[currentQuestionIndex]
+        questionTextView.text = question
     }
 }
 
@@ -79,17 +112,17 @@ class DatabaseHelper(context: Context) :
         return db.insert(TABLE_NAME, null, values)
     }
 
-    fun getAllQuestions(): String {
+    fun getAllQuestions(): List<String> {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT * FROM $TABLE_NAME", null)
-        val stringBuilder = StringBuilder()
+        val questionList = mutableListOf<String>()
 
         val columnIndexQuestion = cursor.getColumnIndex(COLUMN_QUESTION)
 
         while (cursor.moveToNext()) {
             if (columnIndexQuestion >= 0) {
                 val question = cursor.getString(columnIndexQuestion)
-                stringBuilder.append("Question: $question\n")
+                questionList.add(question)
             } else {
                 // Handle the case where the column index is not found
                 // You can log an error message or handle it as per your requirement
@@ -97,6 +130,7 @@ class DatabaseHelper(context: Context) :
         }
 
         cursor.close()
-        return stringBuilder.toString()
+        return questionList
     }
+
 }
